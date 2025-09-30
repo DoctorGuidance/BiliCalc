@@ -12,11 +12,16 @@
     <link rel="stylesheet" href="css/style.css?v=2.5.1">
 </head>
 <body>
+    <!-- Main container for the entire application -->
     <div class="container">
+        <!-- Back button to navigate to a potential parent page -->
         <div class="back-button-wrapper">
              <a href="../index.html" class="back-button">&larr; بازگشت</a>
         </div>
+
+        <!-- Wrapper for the calculator interface -->
         <div class="calculator-wrapper">
+            <!-- SECTION: Header -->
             <div class="header-container">
                 <div class="header-section unified-header">
                     <h1 class="calculator-title">Bilirubin Calculator</h1>
@@ -28,7 +33,9 @@
                     </div>
                 </div>
             </div>
+            <!-- END SECTION: Header -->
 
+            <!-- SECTION: Date and Time of Birth Input -->
             <div class="form-section">
                 <div class="input-row">
                     <div class="input-container">
@@ -51,7 +58,9 @@
                     </div>
                 </div>
             </div>
+            <!-- END SECTION: Date and Time of Birth Input -->
 
+            <!-- SECTION: Gestational Age Input -->
             <div class="form-section">
                 <label class="form-label">سن بارداری (هفته)</label>
                 <div id="ga-segmented-control" class="segmented-control">
@@ -63,14 +72,18 @@
                     <button type="button" data-ga="40">+40</button>
                 </div>
             </div>
+            <!-- END SECTION: Gestational Age Input -->
 
+            <!-- SECTION: Total Bilirubin Input -->
             <div class="form-section bilirubin-section">
                 <label class="form-label" for="bilirubin-input">سطح بیلی روبین توتال (mg/dL)</label>
                 <div class="bilirubin-input-wrapper">
                     <input type="tel" id="bilirubin-input" class="form-control" inputmode="decimal" placeholder="۸٫۰">
                 </div>
             </div>
+            <!-- END SECTION: Total Bilirubin Input -->
 
+            <!-- SECTION: Optional Custom Lab Time Input -->
             <div class="form-section">
                  <label class="checkbox-label" for="use-lab-time-checkbox">
                     <input type="checkbox" id="use-lab-time-checkbox">
@@ -99,7 +112,9 @@
                     </div>
                 </div>
             </div>
+            <!-- END SECTION: Optional Custom Lab Time Input -->
 
+             <!-- SECTION: Infant Age Display -->
              <div class="form-section">
                 <label class="form-label" id="age-label">سن نوزاد</label>
                 <div id="age-display" class="form-control-static">
@@ -107,14 +122,18 @@
                     -
                 </div>
             </div>
+            <!-- END SECTION: Infant Age Display -->
 
+            <!-- SECTION: Risk Factor Checkbox -->
             <div class="form-section">
                 <label class="checkbox-label" for="risk-factors">
                     <input type="checkbox" id="risk-factors" checked>
                     ریسک فاکتور نوروتوکسیسیتی وجود دارد
                 </label>
             </div>
+            <!-- END SECTION: Risk Factor Checkbox -->
 
+            <!-- SECTION: Kernicterus Signs Checkbox and Info -->
             <div class="form-section kernicterus-section">
                 <label class="checkbox-label" for="kernicterus-signs">
                     <input type="checkbox" id="kernicterus-signs">
@@ -127,17 +146,30 @@
                     <li>بی‌حالی شدید (نوزاد به سختی بیدار می‌شود)</li>
                 </ul>
             </div>
+            <!-- END SECTION: Kernicterus Signs Checkbox and Info -->
 
+            <!-- SECTION: Results Area -->
             <div id="result-area" class="result-area">
-                <!-- Results will be dynamically inserted here -->
+                <!-- Results are dynamically inserted here by js/main.js -->
             </div>
+            <!-- END SECTION: Results Area -->
         </div>
+        <!-- END .calculator-wrapper -->
+
+        <!-- SECTION: Medical Disclaimer -->
         <div class="disclaimer-footer">
-            <strong>سلب مسئولیت پزشکی:</strong> این ابزار برای اهداف آموزشی و اطلاعاتی طراحی شده است و نباید به عنوان جایگزین توصیه، تشخیص یا درمان حرفه‌ای پزشکی در نظر گرفته شود. همیشه در مورد هرگونه سوالی که در مورد یک وضعیت پزشکی دارید، از پزشک یا سایر ارائه‌دهندگان خدمات بهداشتی واجد شرایط کمک بگیرید.
+            <strong>سلب مسئولیت پزشکی:</strong> این ابزار برای اهداف آموزشی و اطلاعاتی طراحی شده است و نباید به عنوان جایگزین توصیه، تشخیص یا درمان حرفه‌ای پزشکی در نظر گرفته شود. همیشه در مورد هرگونه سوالی که در مورد یک وضعیت پزشکی دارید، از پزشک یا سایر ارائه‌دهندگان خدمات بهداشتی واجد شرایط کمک بگیggیرید.
         </div>
+        <!-- END SECTION: Medical Disclaimer -->
+
     </div>
+    <!-- END .container -->
+
+    <!-- JavaScript dependencies -->
     <script src="js/persian-datepicker-element.min.js"></script>
     <script src="js/main.js?v=2.5.1"></script>
+
+    <!-- App version footer -->
     <footer class="app-footer">
         Version 2.5.1
     </footer>
