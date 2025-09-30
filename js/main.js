@@ -1,121 +1,142 @@
-document.addEventListener('DOMContentLoaded', function () {
-
 /**
- * بر اساس مدل خطی قطعه‌ای، آستانه اقدام برای زردی نوزادان را محاسبه می‌کند.
- *
- * @param {string} treatmentType - نوع درمان: 'phototherapy' یا 'exchange'.
- * @param {boolean} hasRiskFactor - آیا ریسک فاکتور وجود دارد: true یا false.
- * @param {number} gestationalAge - سن حاملگی به هفته.
- * @param {number} ageInHours - سن نوزاد به ساعت.
- * @param {number} bilirubinLevel - سطح بیلی‌روبین بیمار (TSB) به mg/dL.
- * @returns {object} - نتیجه شامل آستانه، نیاز به اقدام و پیام کامل.
+ * @file main.js
+ * @description This script contains all the client-side logic for the Neonatal Bilirubin Calculator.
+ * It handles user input, calculates bilirubin thresholds based on AAP guidelines, and dynamically
+ * updates the UI with results and recommendations.
  */
-function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageInHours, bilirubinLevel) {
+document.addEventListener('DOMContentLoaded', function () {
+    /**
+     * This is the main execution function that runs after the DOM is fully loaded.
+     * It sets up all the variables by querying the DOM, attaches event listeners to the input fields,
+     * and calls the `initialize` function to set the default state and perform the first calculation.
+     */
 
-    // Helper function to linearly interpolate a value
-    const interpolate = (t, t1, b1, t2, b2) => b1 + (t - t1) * ((b2 - b1) / (t2 - t1));
+    /**
+     * Calculates the action threshold for neonatal jaundice based on a piecewise linear model.
+     * This function determines the appropriate medical response (phototherapy or exchange transfusion)
+     * based on the newborn's age, gestational age, bilirubin level, and risk factors.
+     *
+     * @param {string} treatmentType - The type of treatment guideline to use: 'phototherapy' or 'exchange'.
+     * @param {boolean} hasRiskFactor - Whether neurotoxicity risk factors are present.
+     * @param {number} gestationalAge - The gestational age of the infant in weeks.
+     * @param {number} ageInHours - The postnatal age of the infant in hours.
+     * @param {number} bilirubinLevel - The total serum bilirubin (TSB) level in mg/dL.
+     * @returns {{threshold: number|null, needsAction: boolean, message: string}} An object containing the calculated threshold, whether action is needed, and a descriptive message. Returns null for threshold if inputs are out of range.
+     */
+    function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageInHours, bilirubinLevel) {
 
-    // Data points provided by the user
-    const RAW_DATA = {
-        phototherapy: {
-            noRisk: {
-                '40': { points: [[0, 9], [12, 11], [24, 13.3], [36, 15.3], [60, 18.5], [72, 19.8], [96, 21.7], [336, 21.8]] },
-                '39': { points: [[0, 8.4], [12, 10.5], [24, 12.8], [36, 14.8], [60, 18.2], [72, 19.6], [96, 21.5], [336, 21.8]] },
-                '38': { points: [[0, 8], [12, 10], [24, 12.1], [48, 16], [60, 17.5], [96, 20.7], [336, 21.8]] },
-                '37': { points: [[0, 7.5], [12, 9.6], [24, 11.8], [48, 15.4], [60, 16.9], [96, 20], [336, 21.1]] },
-                '36': { points: [[0, 6.9], [12, 9], [24, 11], [48, 14.6], [60, 16.2], [72, 17.5], [96, 19.4], [336, 20.4]] },
-                '35': { points: [[0, 6.4], [12, 8.5], [36, 12.4], [48, 14.2], [60, 15.6], [72, 16.9], [96, 18.6], [336, 19.7]] },
-                range: [35, 40]
+        /**
+         * Linearly interpolates a value between two points.
+         * @param {number} t - The current time point.
+         * @param {number} t1 - The start time of the segment.
+         * @param {number} b1 - The bilirubin value at the start time.
+         * @param {number} t2 - The end time of the segment.
+         * @param {number} b2 - The bilirubin value at the end time.
+         * @returns {number} The interpolated bilirubin value.
+         */
+        const interpolate = (t, t1, b1, t2, b2) => b1 + (t - t1) * ((b2 - b1) / (t2 - t1));
+
+        // Data points for phototherapy and exchange transfusion thresholds based on AAP guidelines.
+        const RAW_DATA = {
+            phototherapy: {
+                noRisk: {
+                    '40': { points: [[0, 9], [12, 11], [24, 13.3], [36, 15.3], [60, 18.5], [72, 19.8], [96, 21.7], [336, 21.8]] },
+                    '39': { points: [[0, 8.4], [12, 10.5], [24, 12.8], [36, 14.8], [60, 18.2], [72, 19.6], [96, 21.5], [336, 21.8]] },
+                    '38': { points: [[0, 8], [12, 10], [24, 12.1], [48, 16], [60, 17.5], [96, 20.7], [336, 21.8]] },
+                    '37': { points: [[0, 7.5], [12, 9.6], [24, 11.8], [48, 15.4], [60, 16.9], [96, 20], [336, 21.1]] },
+                    '36': { points: [[0, 6.9], [12, 9], [24, 11], [48, 14.6], [60, 16.2], [72, 17.5], [96, 19.4], [336, 20.4]] },
+                    '35': { points: [[0, 6.4], [12, 8.5], [36, 12.4], [48, 14.2], [60, 15.6], [72, 16.9], [96, 18.6], [336, 19.7]] },
+                    range: [35, 40]
+                },
+                withRisk: {
+                    '38': { points: [[0, 6.3], [24, 10.5], [72, 16.5], [96, 18.3], [336, 18.3]] },
+                    '37': { points: [[0, 5.9], [12, 8], [24, 10], [48, 13.6], [60, 14.9], [72, 16.1], [96, 17.9], [336, 18.3]] },
+                    '36': { points: [[0, 5.4], [24, 9.4], [60, 14.2], [96, 17], [336, 18.3]] },
+                    '35': { points: [[0, 4.9], [24, 8.9], [60, 13.5], [72, 14.6], [96, 16.2], [336, 17.4]] },
+                    range: [35, 38]
+                }
             },
-            withRisk: {
-                '38': { points: [[0, 6.3], [24, 10.5], [72, 16.5], [96, 18.3], [336, 18.3]] },
-                '37': { points: [[0, 5.9], [12, 8], [24, 10], [48, 13.6], [60, 14.9], [72, 16.1], [96, 17.9], [336, 18.3]] },
-                '36': { points: [[0, 5.4], [24, 9.4], [60, 14.2], [96, 17], [336, 18.3]] },
-                '35': { points: [[0, 4.9], [24, 8.9], [60, 13.5], [72, 14.6], [96, 16.2], [336, 17.4]] },
-                range: [35, 38]
+            exchange: {
+                noRisk: {
+                    '38': { points: [[24, 21.4], [48, 24], [72, 25.9], [96, 27], [336, 27]] },
+                    '37': { points: [[24, 20.3], [48, 23.1], [72, 25.3], [96, 26.5], [336, 27]] },
+                    '36': { points: [[24, 19], [48, 21.9], [72, 24], [96, 25.5], [336, 27]] },
+                    '35': { points: [[24, 18], [48, 20.6], [72, 22.8], [96, 24.5], [336, 26.3]] },
+                    range: [35, 38]
+                },
+                withRisk: {
+                    '38': { points: [[24, 17.8], [48, 20.1], [72, 22.1], [96, 23.5], [336, 23.5]] },
+                    '37': { points: [[24, 17.2], [48, 19.7], [72, 21.7], [96, 23.1], [336, 23.5]] },
+                    '36': { points: [[24, 16.6], [48, 19], [72, 20.8], [96, 22.1], [336, 23.5]] },
+                    '35': { points: [[24, 16], [48, 18.4], [72, 20.1], [96, 21], [336, 22.9]] },
+                    range: [35, 38]
+                }
             }
-        },
-        exchange: {
-            noRisk: {
-                '38': { points: [[24, 21.4], [48, 24], [72, 25.9], [96, 27], [336, 27]] },
-                '37': { points: [[24, 20.3], [48, 23.1], [72, 25.3], [96, 26.5], [336, 27]] },
-                '36': { points: [[24, 19], [48, 21.9], [72, 24], [96, 25.5], [336, 27]] },
-                '35': { points: [[24, 18], [48, 20.6], [72, 22.8], [96, 24.5], [336, 26.3]] },
-                range: [35, 38]
-            },
-            withRisk: {
-                '38': { points: [[24, 17.8], [48, 20.1], [72, 22.1], [96, 23.5], [336, 23.5]] },
-                '37': { points: [[24, 17.2], [48, 19.7], [72, 21.7], [96, 23.1], [336, 23.5]] },
-                '36': { points: [[24, 16.6], [48, 19], [72, 20.8], [96, 22.1], [336, 23.5]] },
-                '35': { points: [[24, 16], [48, 18.4], [72, 20.1], [96, 21], [336, 22.9]] },
-                range: [35, 38]
-            }
+        };
+
+        // --- 1. Select correct dataset ---
+        if (!RAW_DATA[treatmentType]) {
+            return { threshold: null, message: "خطا: نوع درمان باید 'phototherapy' یا 'exchange' باشد." };
         }
-    };
+        const riskKey = hasRiskFactor ? 'withRisk' : 'noRisk';
+        const dataSet = RAW_DATA[treatmentType][riskKey];
 
-    // --- 1. Select correct dataset ---
-    if (!RAW_DATA[treatmentType]) {
-        return { threshold: null, message: "خطا: نوع درمان باید 'phototherapy' یا 'exchange' باشد." };
-    }
-    const riskKey = hasRiskFactor ? 'withRisk' : 'noRisk';
-    const dataSet = RAW_DATA[treatmentType][riskKey];
-
-    // --- 2. Select correct gestational age data ---
-    let ageData;
-    const [minAge, maxAge] = dataSet.range;
-    if (gestationalAge >= maxAge) {
-        ageData = dataSet[maxAge.toString()];
-    } else if (dataSet[gestationalAge]) {
-        ageData = dataSet[gestationalAge];
-    } else {
-        // Handle 34 weeks for with-risk phototherapy as 35 weeks
-        if (treatmentType === 'phototherapy' && hasRiskFactor && gestationalAge === 34) {
-             ageData = dataSet['35'];
+        // --- 2. Select correct gestational age data ---
+        let ageData;
+        const [minAge, maxAge] = dataSet.range;
+        if (gestationalAge >= maxAge) {
+            ageData = dataSet[maxAge.toString()];
+        } else if (dataSet[gestationalAge]) {
+            ageData = dataSet[gestationalAge];
         } else {
-             return { threshold: null, message: `خطا: برای این نمودار، سن حاملگی باید در محدوده تعریف شده باشد.` };
+            // Handle 34 weeks for with-risk phototherapy as 35 weeks
+            if (treatmentType === 'phototherapy' && hasRiskFactor && gestationalAge === 34) {
+                 ageData = dataSet['35'];
+            } else {
+                 return { threshold: null, message: `خطا: برای این نمودار، سن حاملگی باید در محدوده تعریف شده باشد.` };
+            }
         }
-    }
 
-    // --- 3. Find the correct segment and calculate threshold ---
-    const { points } = ageData;
-    if (ageInHours < points[0][0]) {
-         return { threshold: null, message: `نوزاد (${ageInHours} ساعت) کوچکتر از حداقل سن در نمودار (${points[0][0]} ساعت) است و نیاز به توجه ویژه دارد.` };
-    }
-
-    let threshold;
-    for (let i = 0; i < points.length - 1; i++) {
-        const [t1, b1] = points[i];
-        const [t2, b2] = points[i + 1];
-        if (ageInHours >= t1 && ageInHours <= t2) {
-            threshold = interpolate(ageInHours, t1, b1, t2, b2);
-            break;
+        // --- 3. Find the correct segment and calculate threshold ---
+        const { points } = ageData;
+        if (ageInHours < points[0][0]) {
+             return { threshold: null, message: `نوزاد (${ageInHours} ساعت) کوچکتر از حداقل سن در نمودار (${points[0][0]} ساعت) است و نیاز به توجه ویژه دارد.` };
         }
+
+        let threshold;
+        for (let i = 0; i < points.length - 1; i++) {
+            const [t1, b1] = points[i];
+            const [t2, b2] = points[i + 1];
+            if (ageInHours >= t1 && ageInHours <= t2) {
+                threshold = interpolate(ageInHours, t1, b1, t2, b2);
+                break;
+            }
+        }
+         if (threshold === undefined) { // If age is beyond the last point
+            const [last_t, last_b] = points[points.length - 1];
+            const [second_last_t, second_last_b] = points[points.length - 2];
+            threshold = interpolate(ageInHours, second_last_t, second_last_b, last_t, last_b);
+        }
+
+
+        const roundedThreshold = parseFloat(threshold.toFixed(2));
+        const needsAction = bilirubinLevel >= roundedThreshold;
+
+        // --- 4. Generate final message ---
+        const treatmentText = treatmentType === 'phototherapy' ? 'فتوتراپی' : 'تعویض خون';
+        const riskText = hasRiskFactor ? 'با ریسک فاکتور' : 'بدون ریسک فاکتور';
+
+        const message = `نوزاد ${gestationalAge} هفته در سن ${ageInHours} ساعت:
+    آستانه اقدام: ${roundedThreshold} mg/dL
+    بیلی‌روبین بیمار: ${bilirubinLevel} mg/dL
+    نتیجه: ${needsAction ? 'نیاز به اقدام دارد.' : 'نیاز به اقدام ندارد.'}`;
+
+        return {
+            threshold: roundedThreshold,
+            needsAction: needsAction,
+            message: message
+        };
     }
-     if (threshold === undefined) { // If age is beyond the last point
-        const [last_t, last_b] = points[points.length - 1];
-        const [second_last_t, second_last_b] = points[points.length - 2];
-        threshold = interpolate(ageInHours, second_last_t, second_last_b, last_t, last_b);
-    }
-
-
-    const roundedThreshold = parseFloat(threshold.toFixed(2));
-    const needsAction = bilirubinLevel >= roundedThreshold;
-
-    // --- 4. Generate final message ---
-    const treatmentText = treatmentType === 'phototherapy' ? 'فتوتراپی' : 'تعویض خون';
-    const riskText = hasRiskFactor ? 'با ریسک فاکتور' : 'بدون ریسک فاکتور';
-
-    const message = `نوزاد ${gestationalAge} هفته در سن ${ageInHours} ساعت:
-آستانه اقدام: ${roundedThreshold} mg/dL
-بیلی‌روبین بیمار: ${bilirubinLevel} mg/dL
-نتیجه: ${needsAction ? 'نیاز به اقدام دارد.' : 'نیاز به اقدام ندارد.'}`;
-
-    return {
-        threshold: roundedThreshold,
-        needsAction: needsAction,
-        message: message
-    };
-}
     const dobPicker = document.getElementById('dob-datepicker');
     const birthHourInput = document.getElementById('birth-hour');
     const useLabTimeCheckbox = document.getElementById('use-lab-time-checkbox');
@@ -132,12 +153,26 @@ function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageI
     const resultArea = document.getElementById('result-area');
 
     // --- Helpers ---
+    /**
+     * Converts a number to a string with Persian (Farsi) digits.
+     * Handles both integers and floating-point numbers, and also converts the decimal point
+     * to a Persian decimal separator ('٫').
+     * @param {number|string|null|undefined} n The number or string to be converted.
+     * @returns {string} The number represented with Persian digits. Returns a hyphen '-' if the input is null or undefined.
+     */
     function toPersianNum(n) {
         if (n === null || n === undefined) return '-';
         const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
         return n.toString().replace(/\d/g, x => farsiDigits[x]).replace(/\./g, '٫');
     }
 
+    /**
+     * Converts a string containing Persian or Arabic digits to a string with standard English digits.
+     * It also handles the Persian decimal separator ('٫'), converting it to a standard period ('.').
+     * This is used to process user input before performing calculations.
+     * @param {string|null|undefined} str The string containing Persian/Arabic numerals to be converted.
+     * @returns {string} The converted string with standard English digits. Returns an empty string if the input is null or undefined.
+     */
     function toEnglishNum(str) {
         if (str === null || str === undefined) return '';
         const persianDigits = /[\u06F0-\u06F9]/g;
@@ -164,6 +199,11 @@ function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageI
     };
 
     // --- Main Calculation & UI Update Function ---
+    /**
+     * Gathers all user inputs, updates the central state object, calculates the infant's age,
+     * and triggers the main guideline logic to update the UI. This function serves as the primary
+     * orchestrator for the calculator's logic whenever an input changes.
+     */
     function recalculateAndRender() {
         state.gestationalAge = parseInt(gaControl.querySelector('.active')?.dataset.ga || '38', 10);
         state.hasRiskFactors = riskFactorCheckbox.checked;
@@ -195,6 +235,12 @@ function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageI
     }
 
     // --- Core Guideline Logic ---
+    /**
+     * Executes the core logic for determining treatment recommendations based on the current state.
+     * It handles special cases like kernicterus signs or infants younger than 24 hours,
+     * calls the `getJaundiceGuideline` function for phototherapy and exchange thresholds,
+     * and renders the final recommendations and results in the UI.
+     */
     function runGuidelineLogic() {
         // OVERRIDE: If kernicterus signs are present, immediate action is required.
         if (state.hasKernicterusSigns) {
@@ -272,6 +318,19 @@ function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageI
     }
 
     // --- Event Listeners & Initializers ---
+    /**
+     * Sets up advanced event handling for a numeric input field.
+     * This includes validation, conversion between Persian and English numerals,
+     * and interaction via mouse wheel and touch-drag gestures for incrementing/decrementing the value.
+     * @param {HTMLInputElement} input - The input element to attach the listeners to.
+     * @param {string} stateKey - The key in the global `state` object where this input's value is stored.
+     * @param {object} [options={}] - Configuration options for the input.
+     * @param {number} [options.max] - The maximum allowed value.
+     * @param {number} [options.min=0] - The minimum allowed value.
+     * @param {number} [options.step=1] - The increment/decrement step for wheel/touch events.
+     * @param {boolean} [options.isFloat=false] - Whether the number is a floating-point value.
+     * @param {number} [options.startValue=0] - The default value to use for calculations if the current state value is null.
+     */
     function setupNumericInput(input, stateKey, options = {}) {
         const { max, min = 0, step = 1, isFloat = false, startValue = 0 } = options;
         const validateAndSet = (newValue) => {
@@ -361,6 +420,12 @@ function getJaundiceGuideline(treatmentType, hasRiskFactor, gestationalAge, ageI
     setupNumericInput(bilirubinInput, 'totalBilirubin', { isFloat: true, step: 0.1, min: 1, max: 28, startValue: 8 });
 
     // --- Initializer ---
+    /**
+     * Initializes the calculator application when the page loads.
+     * This function sets up the default state, localizes numbers to Persian,
+     * sets the default gestational age, and initializes the date pickers
+     * and time inputs to the current date and time. It then triggers the first calculation.
+     */
     function initialize() {
         gaControl.querySelectorAll('button').forEach(button => {
             button.textContent = toPersianNum(button.textContent);

@@ -1,7 +1,14 @@
+/**
+ * @file style.css
+ * @description This file contains all the CSS styles for the Neonatal Bilirubin Calculator.
+ * It is inspired by Apple's Human Interface Guidelines for a clean, modern look and feel.
+ * The styling is organized into sections for variables, general resets, layout, and specific components.
+ */
+
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
 
-/* --- Apple Human Interface Guidelines Inspired Styles --- */
-
+/* --- CSS Variables and Root Configuration --- */
+/* Defines the color palette, fonts, and other global style properties for the application. */
 :root {
     --system-blue: #007aff;
     --system-gray-1: #f2f2f7;
@@ -28,7 +35,8 @@
     --system-yellow-dark: #ffc107;
 }
 
-/* --- General & Resets --- */
+/* --- General Resets & Body Styling --- */
+/* Basic styles to ensure consistent look and feel across browsers. */
 body {
     font-family: var(--font-family);
     background-color: var(--system-background);
@@ -47,7 +55,8 @@ body {
     box-sizing: border-box;
 }
 
-/* --- Main Structure --- */
+/* --- Main Layout Structure --- */
+/* Styles for the main containers that structure the page. */
 .container {
     width: 100%;
     max-width: 420px;
@@ -82,7 +91,8 @@ body {
     padding: 20px;
 }
 
-/* --- Index Page Link Styling --- */
+/* --- Header & Title --- */
+/* Styles for the main header, title, and subtitle of the calculator. */
 .calculator-link {
     display: block;
     background-color: var(--system-yellow-light);
@@ -187,6 +197,8 @@ body {
     /* No hover effect */
 }
 
+/* --- Form Sections & Inputs --- */
+/* General styling for form sections and specific input fields like the bilirubin level. */
 .form-section {
     margin-bottom: 24px;
 }
@@ -231,7 +243,8 @@ body {
     color: var(--secondary-label-color);
 }
 
-/* --- New Input Field Design --- */
+/* --- General Input Field Design --- */
+/* Styles for the rows and containers that hold standard input fields. */
 .input-row {
     display: flex;
     gap: 12px;
@@ -320,7 +333,8 @@ body {
     color: var(--tertiary-label-color);
 }
 
-/* --- Gestational Age Buttons --- */
+/* --- Segmented Control (Gestational Age) --- */
+/* Styles for the button-based segmented control used for selecting gestational age. */
 .segmented-control {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
@@ -354,7 +368,8 @@ body {
     transform: translateY(-2px);
 }
 
-/* --- Checkboxes & Optional Sections --- */
+/* --- Checkboxes & Collapsible Sections --- */
+/* Styles for custom checkboxes and the animated sections that they can reveal. */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -405,7 +420,8 @@ input[type="checkbox"]:checked {
     margin-top: 8px;
 }
 
-/* --- Results Area --- */
+/* --- Results Display --- */
+/* Styles for the area where the calculated results and recommendations are displayed. */
 .result-area {
     margin-top: 30px;
     padding-top: 20px;
@@ -525,7 +541,8 @@ input[type="checkbox"]:checked {
     margin-top: -12px; /* Pulls the section up closer to the one above */
 }
 
-/* --- Persian Date Picker Customization --- */
+/* --- Third-Party Component Customization --- */
+/* Overrides and styles for the persian-datepicker-element component to match the app's theme. */
 .input-wrapper persian-datepicker-element {
     width: 100%;
     height: 48px; /* Match form-control height */
@@ -564,7 +581,8 @@ input {
 }
 
 
-/* --- Footer --- */
+/* --- Footer & Disclaimer --- */
+/* Styles for the disclaimer and the fixed app version footer. */
 .app-footer {
     position: fixed;
     bottom: 10px;
