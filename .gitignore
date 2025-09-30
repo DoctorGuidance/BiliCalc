@@ -1,0 +1,11 @@
+# سیستم‌عامل
+.DS_Store
+Thumbs.db
+
+# فایل‌های لاگ یا temp (اگر داشته باشی)
+*.log
+*.tmp
+
+# node_modules اگر js داری با npm
+node_modules/
+
